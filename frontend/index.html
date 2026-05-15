@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mejor Delivery</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f0f0;
+      color: #222;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, #ff4d00, #ff8c00);
+      color: white;
+      padding: 28px 20px 40px;
+      text-align: center;
+      border-radius: 0 0 32px 32px;
+    }
+    header h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+    header p  { font-size: 13px; opacity: 0.88; margin-top: 4px; }
+
+    /* ── SEARCH ── */
+    .search-wrap {
+      max-width: 500px;
+      margin: -22px auto 0;
+      padding: 0 16px;
+    }
+    .search-box {
+      display: flex;
+      gap: 8px;
+      background: white;
+      border-radius: 16px;
+      padding: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    }
+    .search-box input {
+      flex: 1;
+      padding: 10px 12px;
+      border: none;
+      font-size: 15px;
+      outline: none;
+      background: transparent;
+    }
+    .search-box button {
+      padding: 10px 18px;
+      background: #ff4d00;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .search-box button:active { transform: scale(0.97); }
+
+    /* ── FILTROS ── */
+    .filters {
+      display: flex;
+      gap: 8px;
+      padding: 16px 16px 0;
+      max-width: 500px;
+      margin: 0 auto;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .filters::-webkit-scrollbar { display: none; }
+    .filter-btn {
+      white-space: nowrap;
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1.5px solid #ddd;
+      background: white;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 500;
+      color: #555;
+      transition: all .2s;
+    }
+    .filter-btn.active {
+      background: #ff4d00;
+      border-color: #ff4d00;
+      color: white;
+    }
+
+    /* ── LOADING ── */
+    .loader {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      gap: 16px;
+    }
+    .loader.visible { display: flex; }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 4px solid #ffd5c2;
+      border-top-color: #ff4d00;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-text { font-size: 14px; color: #888; }
+    .loader-dots span {
+      animation: blink 1.2s infinite;
+      font-size: 20px;
+      color: #ff4d00;
+    }
+    .loader-dots span:nth-child(2) { animation-delay: .2s; }
+    .loader-dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes blink { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+
+    /* ── STATUS ── */
+    #status {
+      text-align: center;
+      padding: 12px 16px 0;
+      font-size: 13px;
+      color: #888;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    /* ── CARDS ── */
+    .results {
+      max-width: 500px;
+      margin: 12px auto 40px;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      animation: slideUp .3s ease;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .card.winner {
+      border: 2px solid #ff4d00;
+      box-shadow: 0 4px 20px rgba(255,77,0,0.15);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .platform {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .platform.rappi     { background: #fff0ec; color: #ff4d00; }
+    .platform.pedidosya { background: #fff0f0; color: #cc0000; }
+    .platform.ubereats  { background: #f0f0f0; color: #333; }
+
+    .badge-winner {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      background: #ff4d00;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 700;
+    }
+
+    .restaurant { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+    .product    { font-size: 13px; color: #999; margin-bottom: 12px; }
+
+    .card-mid {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 12px;
+    }
+
+    .price-block {}
+    .price-detail { font-size: 12px; color: #aaa; margin-bottom: 2px; }
+    .discount-tag { color: #2a9d2a; font-weight: 600; }
+    .final-price  { font-size: 24px; font-weight: 800; color: #ff4d00; }
+
+    .meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      font-size: 12px;
+      color: #aaa;
+    }
+    .meta .time { font-size: 13px; font-weight: 600; color: #555; }
+    .meta .stars { color: #f5a623; }
+
+    .btn-order {
+      display: block;
+      text-align: center;
+      padding: 12px;
+      background: #ff4d00;
+      color: white;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: .2px;
+    }
+    .btn-order:active { transform: scale(0.98); }
+
+    /* ── EMPTY ── */
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: #bbb;
+      font-size: 15px;
+    }
+    .empty .icon { font-size: 48px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🛵 Mejor Delivery</h1>
+  <p>Compara Rappi, PedidosYa y Uber Eats al instante</p>
+</header>
+
+<div class="search-wrap">
+  <div class="search-box">
+    <input type="text" id="query" placeholder="🔍  ¿Qué quieres pedir?" />
+    <button onclick="buscar()">Buscar</button>
+  </div>
+</div>
+
+<div class="filters" id="filters" style="display:none">
+  <button class="filter-btn active" onclick="setFiltro('precio', this)">💰 Menor precio</button>
+  <button class="filter-btn" onclick="setFiltro('tiempo', this)">⚡ Más rápido</button>
+  <button class="filter-btn" onclick="setFiltro('rating', this)">⭐ Mejor rating</button>
+</div>
+
+<div class="loader" id="loader">
+  <div class="spinner"></div>
+  <div class="loader-dots">
+    <span>•</span><span>•</span><span>•</span>
+  </div>
+  <div class="loader-text" id="loader-text">Consultando Rappi...</div>
+</div>
+
+<div id="status"></div>
+<div class="results" id="results"></div>
+
+<script>
+  let todosLosResultados = [];
+  let filtroActivo = 'precio';
+
+  const mensajesLoader = [
+    'Consultando Rappi...',
+    'Consultando PedidosYa...',
+    'Consultando Uber Eats...',
+    'Comparando precios...',
+    'Buscando la mejor oferta...',
+  ];
+
+  document.getElementById('query').addEventListener('keydown', e => {
+    if (e.key === 'Enter') buscar();
+  });
+
+  function setFiltro(tipo, btn) {
+    filtroActivo = tipo;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    mostrarResultados(ordenar(todosLosResultados));
+  }
+
+  function ordenar(items) {
+    const copia = [...items];
+    if (filtroActivo === 'precio') {
+      return copia.sort((a, b) => a.finalPrice - b.finalPrice);
+    } else if (filtroActivo === 'tiempo') {
+      return copia.sort((a, b) => {
+        const t = x => parseInt(x.estimatedTime) || 99;
+        return t(a) - t(b);
+      });
+    } else if (filtroActivo === 'rating') {
+      return copia.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    }
+    return copia;
+  }
+
+  async function buscar() {
+    const query = document.getElementById('query').value.trim();
+    if (!query) return;
+
+    const loader  = document.getElementById('loader');
+    const status  = document.getElementById('status');
+    const results = document.getElementById('results');
+    const filters = document.getElementById('filters');
+
+    loader.classList.add('visible');
+    status.textContent  = '';
+    results.innerHTML   = '';
+    filters.style.display = 'none';
+
+    let i = 0;
+    const intervalo = setInterval(() => {
+      document.getElementById('loader-text').textContent = mensajesLoader[i % mensajesLoader.length];
+      i++;
+    }, 600);
+
+    try {
+      const res  = await fetch('/api/search?query=' + encodeURIComponent(query));
+      const data = await res.json();
+
+      clearInterval(intervalo);
+      loader.classList.remove('visible');
+
+      if (!data.results || data.results.length === 0) {
+        results.innerHTML = '<div class="empty"><div class="icon">🍽️</div>No encontramos ofertas para "' + query + '"</div>';
+        return;
+      }
+
+      todosLosResultados = data.results;
+      filters.style.display = 'flex';
+      status.textContent = data.results.length + ' ofertas encontradas';
+      mostrarResultados(ordenar(todosLosResultados));
+
+    } catch (err) {
+      clearInterval(intervalo);
+      loader.classList.remove('visible');
+      results.innerHTML = '<div class="empty"><div class="icon">⚠️</div>Error al conectar con el servidor</div>';
+    }
+  }
+
+  function mostrarResultados(items) {
+    const results = document.getElementById('results');
+    results.innerHTML = '';
+
+    items.forEach((item, index) => {
+      const card = document.createElement('div');
+      card.className = 'card' + (index === 0 ? ' winner' : '');
+      card.style.animationDelay = (index * 0.07) + 's';
+
+      const discount = item.discount > 0
+        ? '<span class="discount-tag">-$' + item.discount.toFixed(2) + ' dto</span> · '
+        : '';
+
+      const estrellas = item.rating
+        ? '<span class="stars">★ ' + item.rating + '</span>'
+        : '';
+
+      card.innerHTML =
+        '<div class="card-top">' +
+          '<span class="platform ' + item.platform + '">' + item.platform + '</span>' +
+          (index === 0 ? '<span class="badge-winner">🏆 Mejor opción</span>' : '') +
+        '</div>' +
+        '<div class="restaurant">' + item.restaurantName + '</div>' +
+        '<div class="product">' + item.productName + '</div>' +
+        '<div class="card-mid">' +
+          '<div class="price-block">' +
+            '<div class="price-detail">' + discount + 'envío $' + item.deliveryFee.toFixed(2) + '</div>' +
+            '<div class="final-price">$' + item.finalPrice.toFixed(2) + '</div>' +
+          '</div>' +
+          '<div class="meta">' +
+            '<span class="time">⏱ ' + item.estimatedTime + '</span>' +
+            estrellas +
+          '</div>' +
+        '</div>' +
+        '<a class="btn-order" href="' + item.deepLink + '" target="_blank">Pedir en ' + item.platform + ' →</a>';
+
+      results.appendChild(card);
+    });
+  }
+</script>
+
+</body>
+</html>
