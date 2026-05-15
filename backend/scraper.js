@@ -1,63 +1,242 @@
-// scraper.js — obtiene ofertas de las diferentes plataformas
-// Versión básica con datos de ejemplo
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+puppeteer.use(StealthPlugin());
 
-async function getRappi(query, city) {
-  // En producción, aquí iría web scraping o API calls a Rappi
-  // Por ahora retornamos datos de ejemplo
-  return [
-    {
+async function getBrowser() {
+  return await puppeteer.launch({
+    headless: 'new',
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+  });
+}
+
+async function getRappi(query) {
+  let browser;
+  try {
+    browser = await getBrowser();
+    const page = await browser.newPage();
+    await page.setViewport({ width: 390, height: 844 });
+    await page.setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1');
+
+    await page.goto(`https://www.rappi.cl/search?query=${encodeURIComponent(query)}`, {
+      waitUntil: 'networkidle2', timeout: 25000
+    });
+
+    await new Promise(r => setTimeout(r, 3000));
+    await page.evaluate(() => window.scrollBy(0, 1200));
+    await new Promise(r => setTimeout(r, 2000));
+
+    const results = await page.evaluate(() => {
+      const seen = new Set();
+      const items = [];
+
+      document.querySelectorAll('a[href*="/restaurantes/"]').forEach(link => {
+        const href = link.href;
+        if (seen.has(href)) return;
+
+        const card = link.closest('li, article') || link;
+        const text = card.innerText?.trim() || link.innerText?.trim();
+        if (!text || text.length < 5) return;
+
+        const lines = text.split(/\n|•/).map(l => l.trim()).filter(l => l);
+        const name = lines[0];
+        const timeLine = lines.find(l => l.includes('min')) || '';
+        const feeLine = lines.find(l => l.includes('$')) || '';
+        const ratingLine = lines.find(l => /^\d[\.,]\d$/.test(l)) || '';
+        const discountLine = lines.find(l => l.includes('%')) || '';
+
+        if (name && name.length > 3) {
+          seen.add(href);
+          items.push({ name, timeLine, feeLine, ratingLine, discountLine, href });
+        }
+      });
+
+      return items.slice(0, 4);
+    });
+
+    if (!results.length) return getFallbackRappi(query);
+
+    return results.map(r => ({
       platform: 'rappi',
-      restaurantName: 'Burguer Kings - ' + (city || 'Centro'),
-      productName: query || 'Combo Hamburguesa',
-      price: 12.99,
-      deliveryFee: 2.50,
-      discount: 0,
-      estimatedTime: '25-30 min',
-      rating: 4.5,
-      deepLink: 'https://rappi.com',
+      restaurantName: r.name,
+      productName: query,
+      price: 5490,
+      deliveryFee: parseDelivery(r.feeLine),
+      discount: parseDiscount(r.discountLine, 5490),
+      estimatedTime: r.timeLine || '25-35 min',
+      rating: parseRating(r.ratingLine),
+      deepLink: r.href + '?utm_source=mejordelivery',
       imageUrl: null,
-    },
-  ];
+    }));
+
+  } catch (err) {
+    console.log('[rappi]', err.message);
+    return getFallbackRappi(query);
+  } finally {
+    if (browser) await browser.close();
+  }
 }
 
-async function getPedidosYa(query, city) {
-  // En producción, aquí iría web scraping o API calls a PedidosYa
-  return [
-    {
+async function getPedidosYa(query) {
+  let browser;
+  try {
+    browser = await getBrowser();
+    const page = await browser.newPage();
+    await page.setViewport({ width: 390, height: 844 });
+    await page.setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1');
+
+    await page.goto(`https://www.pedidosya.cl/restaurantes/santiago?query=${encodeURIComponent(query)}`, {
+  waitUntil: 'networkidle2', timeout: 25000
+});
+
+    await new Promise(r => setTimeout(r, 3000));
+    await page.evaluate(() => window.scrollBy(0, 800));
+    await new Promise(r => setTimeout(r, 2000));
+
+    const results = await page.evaluate(() => {
+      const seen = new Set();
+      const items = [];
+
+      document.querySelectorAll('a[href*="/restaurantes/"]').forEach(link => {
+        const href = link.href;
+        if (seen.has(href)) return;
+
+        const text = link.innerText?.trim();
+        if (!text || text.length < 5) return;
+
+        const lines = text.split(/\n|•/).map(l => l.trim()).filter(l => l);
+        const name = lines[0];
+        const timeLine = lines.find(l => l.includes('min')) || '';
+        const feeLine = lines.find(l => l.includes('$') || l.toLowerCase().includes('gratis')) || '';
+        const ratingLine = lines.find(l => /^\d[\.,]\d$/.test(l)) || '';
+
+        if (name && name.length > 3) {
+          seen.add(href);
+          items.push({ name, timeLine, feeLine, ratingLine, href });
+        }
+      });
+
+      return items.slice(0, 4);
+    });
+
+    if (!results.length) return getFallbackPedidosYa(query);
+
+    return results.map(r => ({
       platform: 'pedidosya',
-      restaurantName: 'Pizza Express - ' + (city || 'Centro'),
-      productName: query || 'Pizza Grande',
-      price: 14.99,
-      deliveryFee: 1.50,
-      discount: 2.00,
-      estimatedTime: '20-25 min',
-      rating: 4.3,
-      deepLink: 'https://pedidosya.com',
+      restaurantName: r.name,
+      productName: query,
+      price: 5490,
+      deliveryFee: parseDelivery(r.feeLine),
+      discount: 0,
+      estimatedTime: r.timeLine || '20-30 min',
+      rating: parseRating(r.ratingLine),
+      deepLink: r.href + '?utm_source=mejordelivery',
       imageUrl: null,
-    },
-  ];
+    }));
+
+  } catch (err) {
+    console.log('[pedidosya]', err.message);
+    return getFallbackPedidosYa(query);
+  } finally {
+    if (browser) await browser.close();
+  }
 }
 
-async function getUberEats(query, city) {
-  // En producción, aquí iría web scraping o API calls a Uber Eats
-  return [
-    {
+async function getUberEats(query) {
+  let browser;
+  try {
+    browser = await getBrowser();
+    const page = await browser.newPage();
+    await page.setViewport({ width: 390, height: 844 });
+    await page.setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1');
+
+    await page.goto(`https://www.ubereats.com/cl/search?q=${encodeURIComponent(query)}`, {
+      waitUntil: 'networkidle2', timeout: 25000
+    });
+
+    await new Promise(r => setTimeout(r, 3000));
+    await page.evaluate(() => window.scrollBy(0, 800));
+    await new Promise(r => setTimeout(r, 2000));
+
+    const results = await page.evaluate(() => {
+      const seen = new Set();
+      const items = [];
+
+      document.querySelectorAll('a[href*="/cl/store/"], a[href*="/store/"]').forEach(link => {
+        const href = link.href;
+        if (seen.has(href)) return;
+
+        const text = link.innerText?.trim();
+        if (!text || text.length < 5) return;
+
+        const lines = text.split(/\n|•/).map(l => l.trim()).filter(l => l);
+        const name = lines[0];
+        const timeLine = lines.find(l => l.includes('min')) || '';
+        const feeLine = lines.find(l => l.includes('$') || l.toLowerCase().includes('gratis')) || '';
+        const ratingLine = lines.find(l => /^\d[\.,]\d$/.test(l)) || '';
+
+        if (name && name.length > 3) {
+          seen.add(href);
+          items.push({ name, timeLine, feeLine, ratingLine, href });
+        }
+      });
+
+      return items.slice(0, 4);
+    });
+
+    if (!results.length) return getFallbackUberEats(query);
+
+    return results.map(r => ({
       platform: 'ubereats',
-      restaurantName: 'Tacos al Pastor - ' + (city || 'Centro'),
-      productName: query || 'Tacos x3',
-      price: 8.99,
-      deliveryFee: 3.00,
-      discount: 1.00,
-      estimatedTime: '15-20 min',
-      rating: 4.7,
-      deepLink: 'https://ubereats.com',
+      restaurantName: r.name,
+      productName: query,
+      price: 5490,
+      deliveryFee: parseDelivery(r.feeLine),
+      discount: 0,
+      estimatedTime: r.timeLine || '20-25 min',
+      rating: parseRating(r.ratingLine),
+      deepLink: r.href + '?utm_source=mejordelivery',
       imageUrl: null,
-    },
-  ];
+    }));
+
+  } catch (err) {
+    console.log('[ubereats]', err.message);
+    return getFallbackUberEats(query);
+  } finally {
+    if (browser) await browser.close();
+  }
 }
 
-module.exports = {
-  getRappi,
-  getPedidosYa,
-  getUberEats,
-};
+// ── HELPERS ──
+function parseDelivery(text) {
+  if (!text) return 990;
+  if (text.toLowerCase().includes('gratis') || text.includes('$ 0') || text.includes('$0')) return 0;
+  const match = text.replace(/\./g, '').match(/\d+/);
+  return match ? parseInt(match[0]) : 990;
+}
+
+function parseRating(text) {
+  if (!text) return null;
+  const match = text.match(/[\d,]+/);
+  return match ? parseFloat(match[0].replace(',', '.')) : null;
+}
+
+function parseDiscount(text, price) {
+  if (!text) return 0;
+  const match = text.match(/(\d+)%/);
+  if (!match) return 0;
+  return Math.round(price * parseInt(match[1]) / 100);
+}
+
+function getFallbackRappi(query) {
+  return [{ platform: 'rappi', restaurantName: 'Resultados en Rappi', productName: query, price: 5490, deliveryFee: 990, discount: 0, estimatedTime: '25-35 min', rating: null, deepLink: `https://www.rappi.cl/search?query=${encodeURIComponent(query)}&utm_source=mejordelivery`, imageUrl: null }];
+}
+
+function getFallbackPedidosYa(query) {
+  return [{ platform: 'pedidosya', restaurantName: 'Resultados en PedidosYa', productName: query, price: 5490, deliveryFee: 690, discount: 0, estimatedTime: '20-30 min', rating: null, deepLink: `https://www.pedidosya.cl/restaurantes?query=${encodeURIComponent(query)}&utm_source=mejordelivery`, imageUrl: null }];
+}
+
+function getFallbackUberEats(query) {
+  return [{ platform: 'ubereats', restaurantName: 'Resultados en Uber Eats', productName: query, price: 5490, deliveryFee: 1190, discount: 0, estimatedTime: '20-25 min', rating: null, deepLink: `https://www.ubereats.com/cl/search?q=${encodeURIComponent(query)}&utm_source=mejordelivery`, imageUrl: null }];
+}
+
+module.exports = { getRappi, getPedidosYa, getUberEats };
