@@ -322,7 +322,7 @@
     }, 600);
 
     try {
-      const res  = await fetch('/api/search?query=' + encodeURIComponent(query));
+      const res = await fetch('https://mejor-delivery-api.onrender.com/api/search?query=' + encodeURIComponent(query));
       const data = await res.json();
 
       clearInterval(intervalo);
