@@ -46,11 +46,17 @@ app.get('/api/search', async (req, res) => {
   }
 
   try {
-    const [rappiResult, pedidosyaResult, ubereatsResult] = await Promise.allSettled([
-      scraper.getRappi(query, city),
-      scraper.getPedidosYa(query, city),
-      scraper.getUberEats(query, city),
-    ]);
+    const lat = req.query.lat || null;
+const lng = req.query.lng || null;
+
+const lat = req.query.lat || null;
+const lng = req.query.lng || null;
+
+const [rappiResult, pedidosyaResult, ubereatsResult] = await Promise.allSettled([
+  scraper.getRappi(query, lat, lng),
+  scraper.getPedidosYa(query, lat, lng),
+  scraper.getUberEats(query, lat, lng),
+]);
 
     const rawResults = [
       ...(rappiResult.status === 'fulfilled' ? rappiResult.value : []),

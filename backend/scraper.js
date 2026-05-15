@@ -70,14 +70,14 @@ async function getRappi(query) {
 
   } catch (err) {
     console.log('[rappi]', err.message);
-    return getFallbackRappi(query);
+    return getFallbackRappi(query, lat, lng);
   } finally {
     if (browser) await browser.close();
   }
 }
 
-async function getPedidosYa(query) {
-  let browser;
+async function getPedidosYa(query, lat, lng) {
+  let browser;<<<<<<<
   try {
     browser = await getBrowser();
     const page = await browser.newPage();
@@ -135,13 +135,13 @@ async function getPedidosYa(query) {
 
   } catch (err) {
     console.log('[pedidosya]', err.message);
-    return getFallbackPedidosYa(query);
+    return getFallbackPedidosYa(query, lat, lng);
   } finally {
     if (browser) await browser.close();
   }
 }
 
-async function getUberEats(query) {
+async function getUberEats(query, lat, lng) {
   let browser;
   try {
     browser = await getBrowser();
@@ -200,7 +200,7 @@ async function getUberEats(query) {
 
   } catch (err) {
     console.log('[ubereats]', err.message);
-    return getFallbackUberEats(query);
+    return getFallbackUberEats(query, lat, lng);
   } finally {
     if (browser) await browser.close();
   }
@@ -227,16 +227,26 @@ function parseDiscount(text, price) {
   return Math.round(price * parseInt(match[1]) / 100);
 }
 
-function getFallbackRappi(query) {
-  return [{ platform: 'rappi', restaurantName: 'Resultados en Rappi', productName: query, price: 5490, deliveryFee: 990, discount: 0, estimatedTime: '25-35 min', rating: null, deepLink: `https://www.rappi.cl/search?query=${encodeURIComponent(query)}&utm_source=mejordelivery`, imageUrl: null }];
+function getFallbackRappi(query, lat, lng) {
+  const base = lat
+    ? `https://www.rappi.cl/search?query=${encodeURIComponent(query)}&lat=${lat}&lng=${lng}`
+    : `https://www.rappi.cl/search?query=${encodeURIComponent(query)}`;
+  return [{ platform: 'rappi', restaurantName: 'Ver resultados en Rappi', productName: query, price: 5490, deliveryFee: 990, discount: 0, estimatedTime: '25-35 min', rating: null, deepLink: base + '&utm_source=mejordelivery', imageUrl: null }];
 }
 
-function getFallbackPedidosYa(query) {
-  return [{ platform: 'pedidosya', restaurantName: 'Resultados en PedidosYa', productName: query, price: 5490, deliveryFee: 690, discount: 0, estimatedTime: '20-30 min', rating: null, deepLink: `https://www.pedidosya.cl/restaurantes?query=${encodeURIComponent(query)}&utm_source=mejordelivery`, imageUrl: null }];
+function getFallbackPedidosYa(query, lat, lng) {
+  const base = lat
+    ? `https://www.pedidosya.cl/restaurantes?query=${encodeURIComponent(query)}&lat=${lat}&lng=${lng}`
+    : `https://www.pedidosya.cl/restaurantes/santiago?query=${encodeURIComponent(query)}`;
+  return [{ platform: 'pedidosya', restaurantName: 'Ver resultados en PedidosYa', productName: query, price: 5490, deliveryFee: 690, discount: 0, estimatedTime: '20-30 min', rating: null, deepLink: base + '&utm_source=mejordelivery', imageUrl: null }];
 }
 
-function getFallbackUberEats(query) {
-  return [{ platform: 'ubereats', restaurantName: 'Resultados en Uber Eats', productName: query, price: 5490, deliveryFee: 1190, discount: 0, estimatedTime: '20-25 min', rating: null, deepLink: `https://www.ubereats.com/cl/search?q=${encodeURIComponent(query)}&utm_source=mejordelivery`, imageUrl: null }];
+function getFallbackUberEats(query, lat, lng) {
+  const pl = lat
+    ? `JTdCJTIybGF0aXR1ZGUlMjIlM0E${lat}JTJDJTIybG9uZ2l0dWRlJTIyJTNBJTIy${lng}JTIyJTdk`
+    : '';
+  const base = `https://www.ubereats.com/cl/search?q=${encodeURIComponent(query)}${pl ? '&pl=' + pl : ''}`;
+  return [{ platform: 'ubereats', restaurantName: 'Ver resultados en Uber Eats', productName: query, price: 5490, deliveryFee: 1190, discount: 0, estimatedTime: '20-25 min', rating: null, deepLink: base + '&utm_source=mejordelivery', imageUrl: null }];
 }
 
 module.exports = { getRappi, getPedidosYa, getUberEats };
