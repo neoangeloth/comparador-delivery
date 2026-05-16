@@ -227,22 +227,34 @@ function parseDiscount(text, price) {
 }
 
 function getFallbackRappi(query, lat, lng) {
-  const base = lat
-    ? `https://www.rappi.cl/search?query=${encodeURIComponent(query)}&lat=${lat}&lng=${lng}`
-    : `https://www.rappi.cl/search?query=${encodeURIComponent(query)}`;
-  return [{ platform: 'rappi', restaurantName: 'Ver resultados en Rappi', productName: query, price: 5490, deliveryFee: 990, discount: 0, estimatedTime: '25-35 min', rating: null, deepLink: base + '&utm_source=mejordelivery', imageUrl: null }];
+  let url = `https://www.rappi.cl/search?query=${encodeURIComponent(query)}`;
+  if (lat && lng) url += `&lat=${lat}&lng=${lng}`;
+  return [{ platform: 'rappi', restaurantName: 'Ver resultados en Rappi', productName: query, price: 5490, deliveryFee: 990, discount: 0, estimatedTime: '25-35 min', rating: null, deepLink: url + '&utm_source=mejordelivery', imageUrl: null }];
 }
 
 function getFallbackPedidosYa(query, lat, lng) {
-  const base = lat
-    ? `https://www.pedidosya.cl/restaurantes?query=${encodeURIComponent(query)}&lat=${lat}&lng=${lng}`
-    : `https://www.pedidosya.cl/restaurantes/santiago?query=${encodeURIComponent(query)}`;
+  // Detectar ciudad según coordenadas
+  let ciudad = 'santiago';
+  if (lat && lng) {
+    const laLat = parseFloat(lat);
+    if (laLat > -33.0 && laLat < -32.5) ciudad = 'vina-del-mar';
+    else if (laLat > -33.6 && laLat < -33.3) ciudad = 'santiago';
+    else if (laLat > -36.9 && laLat < -36.7) ciudad = 'concepcion';
+    else if (laLat > -29.9 && laLat < -29.8) ciudad = 'coquimbo';
+    else if (laLat > -23.7 && laLat < -23.5) ciudad = 'antofagasta';
+    else if (laLat > -20.3 && laLat < -20.1) ciudad = 'iquique';
+    else if (laLat > -18.5 && laLat < -18.4) ciudad = 'arica';
+    else if (laLat > -38.8 && laLat < -38.6) ciudad = 'temuco';
+    else if (laLat > -39.9 && laLat < -39.7) ciudad = 'valdivia';
+  }
+  const base = `https://www.pedidosya.cl/restaurantes/${ciudad}?query=${encodeURIComponent(query)}`;
   return [{ platform: 'pedidosya', restaurantName: 'Ver resultados en PedidosYa', productName: query, price: 5490, deliveryFee: 690, discount: 0, estimatedTime: '20-30 min', rating: null, deepLink: base + '&utm_source=mejordelivery', imageUrl: null }];
 }
 
 function getFallbackUberEats(query, lat, lng) {
-  const base = `https://www.ubereats.com/cl/search?q=${encodeURIComponent(query)}`;
-  return [{ platform: 'ubereats', restaurantName: 'Ver resultados en Uber Eats', productName: query, price: 5490, deliveryFee: 1190, discount: 0, estimatedTime: '20-25 min', rating: null, deepLink: base + '&utm_source=mejordelivery', imageUrl: null }];
+  let url = `https://www.ubereats.com/cl/search?q=${encodeURIComponent(query)}`;
+  if (lat && lng) url += `&userLat=${lat}&userLng=${lng}`;
+  return [{ platform: 'ubereats', restaurantName: 'Ver resultados en Uber Eats', productName: query, price: 5490, deliveryFee: 1190, discount: 0, estimatedTime: '20-25 min', rating: null, deepLink: url + '&utm_source=mejordelivery', imageUrl: null }];
 }
 
 module.exports = { getRappi, getPedidosYa, getUberEats };
