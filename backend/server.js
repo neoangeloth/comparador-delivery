@@ -11,12 +11,10 @@ const cache = require('./cache');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ── SEGURIDAD ──
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 app.use(express.json());
 
-// Máximo 30 búsquedas por minuto por IP
 const limiter = rateLimit({
   windowMs: 60 * 1000,
   max: 30,
@@ -24,10 +22,8 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// ── ARCHIVOS ESTÁTICOS ──
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// ── BÚSQUEDA ──
 app.get('/api/search', async (req, res) => {
   const { query, lat, lng, address } = req.query;
 
@@ -69,29 +65,10 @@ app.get('/api/search', async (req, res) => {
   }
 });
 
-    const rawResults = [
-      ...(rappiResult.status === 'fulfilled' ? rappiResult.value : []),
-      ...(pedidosyaResult.status === 'fulfilled' ? pedidosyaResult.value : []),
-      ...(ubereatsResult.status === 'fulfilled' ? ubereatsResult.value : []),
-    ];
-
-    const ranked = comparator.rank(rawResults);
-    cache.set(cacheKey, ranked, 300);
-
-    return res.json({ source: 'live', results: ranked });
-
-  } catch (err) {
-    console.error('[error]', err.message);
-    return res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-// ── SALUD ──
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ── FRONTEND ──
 app.get('/{*path}', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
