@@ -29,34 +29,45 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 
 // ── BÚSQUEDA ──
 app.get('/api/search', async (req, res) => {
-  const { query, city } = req.query;
+  const { query, lat, lng, address } = req.query;
 
   if (!query || query.trim().length < 2) {
     return res.status(400).json({ error: 'Escribe al menos 2 caracteres' });
   }
 
-  if (query.length > 100) {
-    return res.status(400).json({ error: 'Búsqueda demasiado larga' });
+  if (!lat && !address) {
+    return res.status(400).json({ error: 'Se requiere ubicación para buscar' });
   }
 
-  const cacheKey = query.trim().toLowerCase() + '-' + (city || 'default');
+  const cacheKey = query.trim().toLowerCase() + '-' + (lat || address);
   const cached = cache.get(cacheKey);
   if (cached) {
     return res.json({ source: 'cache', results: cached });
   }
 
   try {
-    const lat = req.query.lat || null;
-const lng = req.query.lng || null;
+    const [rappiResult, pedidosyaResult, ubereatsResult] = await Promise.allSettled([
+      scraper.getRappi(query, lat, lng, address),
+      scraper.getPedidosYa(query, lat, lng, address),
+      scraper.getUberEats(query, lat, lng, address),
+    ]);
 
-const lat = req.query.lat || null;
-const lng = req.query.lng || null;
+    const rawResults = [
+      ...(rappiResult.status === 'fulfilled' ? rappiResult.value : []),
+      ...(pedidosyaResult.status === 'fulfilled' ? pedidosyaResult.value : []),
+      ...(ubereatsResult.status === 'fulfilled' ? ubereatsResult.value : []),
+    ];
 
-const [rappiResult, pedidosyaResult, ubereatsResult] = await Promise.allSettled([
-  scraper.getRappi(query, lat, lng),
-  scraper.getPedidosYa(query, lat, lng),
-  scraper.getUberEats(query, lat, lng),
-]);
+    const ranked = comparator.rank(rawResults);
+    cache.set(cacheKey, ranked, 180);
+
+    return res.json({ source: 'live', results: ranked });
+
+  } catch (err) {
+    console.error('[error]', err.message);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
 
     const rawResults = [
       ...(rappiResult.status === 'fulfilled' ? rappiResult.value : []),
