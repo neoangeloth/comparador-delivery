@@ -233,20 +233,30 @@ function getFallbackRappi(query, lat, lng) {
 }
 
 function getFallbackPedidosYa(query, lat, lng) {
-  // Detectar ciudad según coordenadas
-  let ciudad = 'santiago';
-  if (lat && lng) {
+  let ciudad = 'vina-del-mar';
+  if (lat) {
     const laLat = parseFloat(lat);
-    if (laLat > -33.0 && laLat < -32.5) ciudad = 'vina-del-mar';
-    else if (laLat > -33.6 && laLat < -33.3) ciudad = 'santiago';
-    else if (laLat > -36.9 && laLat < -36.7) ciudad = 'concepcion';
-    else if (laLat > -29.9 && laLat < -29.8) ciudad = 'coquimbo';
-    else if (laLat > -23.7 && laLat < -23.5) ciudad = 'antofagasta';
-    else if (laLat > -20.3 && laLat < -20.1) ciudad = 'iquique';
-    else if (laLat > -18.5 && laLat < -18.4) ciudad = 'arica';
-    else if (laLat > -38.8 && laLat < -38.6) ciudad = 'temuco';
-    else if (laLat > -39.9 && laLat < -39.7) ciudad = 'valdivia';
+    if (laLat < -33.3) ciudad = 'santiago';
+    else if (laLat < -32.5) ciudad = 'vina-del-mar';
   }
+  // Deep link directo a la app de PedidosYa
+  const appLink = `pedidosya://search?query=${encodeURIComponent(query)}&city=${ciudad}`;
+  // Fallback web si no tiene la app
+  const webLink = `https://www.pedidosya.cl/restaurantes/${ciudad}/${encodeURIComponent(query)}`;
+  return [{
+    platform: 'pedidosya',
+    restaurantName: 'Ver resultados en PedidosYa',
+    productName: query,
+    price: 5490,
+    deliveryFee: 690,
+    discount: 0,
+    estimatedTime: '20-30 min',
+    rating: null,
+    deepLink: appLink,
+    webLink: webLink,
+    imageUrl: null,
+  }];
+}
   const base = `https://www.pedidosya.cl/restaurantes/${ciudad}?query=${encodeURIComponent(query)}`;
   return [{ platform: 'pedidosya', restaurantName: 'Ver resultados en PedidosYa', productName: query, price: 5490, deliveryFee: 690, discount: 0, estimatedTime: '20-30 min', rating: null, deepLink: base + '&utm_source=mejordelivery', imageUrl: null }];
 }

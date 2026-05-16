@@ -341,35 +341,28 @@
   }
 
   function generarCheckoutLink(item) {
-    const base = item.deepLink;
-
-    if (item.platform === 'rappi') {
-      // Rappi abre directo al restaurante con ubicación
-      if (userLat) {
-        return base + (base.includes('?') ? '&' : '?') +
-          `lat=${userLat}&lng=${userLng}&utm_source=mejordelivery&utm_medium=comparador`;
-      }
-      return base;
-    }
-
-    if (item.platform === 'pedidosya') {
-      // PedidosYa con ciudad
-      const city = userAddress.split(',').pop()?.trim().toLowerCase().replace(/\s+/g, '-') || 'santiago';
-      return base + (base.includes('?') ? '&' : '?') +
-        `utm_source=mejordelivery&utm_medium=comparador`;
-    }
-
-    if (item.platform === 'ubereats') {
-      // Uber Eats con coordenadas en el link
-      if (userLat) {
-        return base + (base.includes('?') ? '&' : '?') +
-          `utm_source=mejordelivery&mod=storeDeliveryTime`;
-      }
-      return base;
-    }
-
-    return base;
+  if (item.platform === 'rappi') {
+    let url = item.deepLink;
+    if (userLat) url += `&lat=${userLat}&lng=${userLng}`;
+    return url;
   }
+
+  if (item.platform === 'pedidosya') {
+    // Intentar abrir app nativa, si falla abre web
+    const appUrl = `pedidosya://search?query=${encodeURIComponent(item.productName)}`;
+    const webUrl = item.webLink || `https://www.pedidosya.cl/restaurantes/vina-del-mar?utm_source=mejordelivery`;
+    // En móvil intenta app, en desktop va web
+    return /Android|iPhone/i.test(navigator.userAgent) ? appUrl : webUrl;
+  }
+
+  if (item.platform === 'ubereats') {
+    let url = item.deepLink;
+    if (userLat) url += `&userLat=${userLat}&userLng=${userLng}`;
+    return url;
+  }
+
+  return item.deepLink;
+}
 </script>
 
 </body>
