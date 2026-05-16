@@ -348,12 +348,12 @@
   }
 
   if (item.platform === 'pedidosya') {
-    // Intentar abrir app nativa, si falla abre web
-    const appUrl = `pedidosya://search?query=${encodeURIComponent(item.productName)}`;
-    const webUrl = item.webLink || `https://www.pedidosya.cl/restaurantes/vina-del-mar?utm_source=mejordelivery`;
-    // En móvil intenta app, en desktop va web
-    return /Android|iPhone/i.test(navigator.userAgent) ? appUrl : webUrl;
-  }
+  const ciudad = item.restaurantName.includes('Viña') ? 'vina-del-mar' : 'santiago';
+  const addr = encodeURIComponent(userAddress || '');
+  const appUrl = `pedidosya://search?query=${encodeURIComponent(item.productName)}&city=${ciudad}`;
+  const webUrl = `https://www.pedidosya.cl/restaurantes/${ciudad}?query=${encodeURIComponent(item.productName)}&address=${addr}`;
+  return /Android|iPhone/i.test(navigator.userAgent) ? appUrl : webUrl;
+}
 
   if (item.platform === 'ubereats') {
     let url = item.deepLink;
