@@ -9,7 +9,7 @@ async function getBrowser() {
   });
 }
 
-async function getRappi(query) {
+async function getRappi(query, lat, lng) {
   let browser;
   try {
     browser = await getBrowser();
@@ -53,7 +53,7 @@ async function getRappi(query) {
       return items.slice(0, 4);
     });
 
-    if (!results.length) return getFallbackRappi(query);
+    if (!results.length) return getFallbackRappi(query, lat, lng);
 
     return results.map(r => ({
       platform: 'rappi',
@@ -77,7 +77,7 @@ async function getRappi(query) {
 }
 
 async function getPedidosYa(query, lat, lng) {
-  let browser;<<<<<<<
+  let browser;
   try {
     browser = await getBrowser();
     const page = await browser.newPage();
@@ -85,8 +85,8 @@ async function getPedidosYa(query, lat, lng) {
     await page.setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1');
 
     await page.goto(`https://www.pedidosya.cl/restaurantes/santiago?query=${encodeURIComponent(query)}`, {
-  waitUntil: 'networkidle2', timeout: 25000
-});
+      waitUntil: 'networkidle2', timeout: 25000
+    });
 
     await new Promise(r => setTimeout(r, 3000));
     await page.evaluate(() => window.scrollBy(0, 800));
@@ -118,7 +118,7 @@ async function getPedidosYa(query, lat, lng) {
       return items.slice(0, 4);
     });
 
-    if (!results.length) return getFallbackPedidosYa(query);
+    if (!results.length) return getFallbackPedidosYa(query, lat, lng);
 
     return results.map(r => ({
       platform: 'pedidosya',
@@ -183,7 +183,7 @@ async function getUberEats(query, lat, lng) {
       return items.slice(0, 4);
     });
 
-    if (!results.length) return getFallbackUberEats(query);
+    if (!results.length) return getFallbackUberEats(query, lat, lng);
 
     return results.map(r => ({
       platform: 'ubereats',
@@ -206,7 +206,6 @@ async function getUberEats(query, lat, lng) {
   }
 }
 
-// ── HELPERS ──
 function parseDelivery(text) {
   if (!text) return 990;
   if (text.toLowerCase().includes('gratis') || text.includes('$ 0') || text.includes('$0')) return 0;
@@ -242,10 +241,7 @@ function getFallbackPedidosYa(query, lat, lng) {
 }
 
 function getFallbackUberEats(query, lat, lng) {
-  const pl = lat
-    ? `JTdCJTIybGF0aXR1ZGUlMjIlM0E${lat}JTJDJTIybG9uZ2l0dWRlJTIyJTNBJTIy${lng}JTIyJTdk`
-    : '';
-  const base = `https://www.ubereats.com/cl/search?q=${encodeURIComponent(query)}${pl ? '&pl=' + pl : ''}`;
+  const base = `https://www.ubereats.com/cl/search?q=${encodeURIComponent(query)}`;
   return [{ platform: 'ubereats', restaurantName: 'Ver resultados en Uber Eats', productName: query, price: 5490, deliveryFee: 1190, discount: 0, estimatedTime: '20-25 min', rating: null, deepLink: base + '&utm_source=mejordelivery', imageUrl: null }];
 }
 
