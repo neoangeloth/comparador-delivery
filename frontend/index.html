@@ -7,46 +7,28 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f0f0; color: #222; min-height: 100vh; }
-
-    /* HEADER */
     header { background: linear-gradient(135deg, #ff4d00, #ff8c00); color: white; padding: 28px 20px 50px; text-align: center; border-radius: 0 0 32px 32px; }
-    header h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
-    header p  { font-size: 13px; opacity: 0.88; margin-top: 4px; }
-
-    /* UBICACION BADGE */
-    .location-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(255,255,255,0.2); border-radius: 20px;
-      padding: 5px 12px; font-size: 12px; margin-top: 10px;
-      cursor: pointer; border: 1px solid rgba(255,255,255,0.3);
-    }
-    .location-badge:active { background: rgba(255,255,255,0.3); }
-
-    /* SEARCH */
-    .search-wrap { max-width: 500px; margin: -28px auto 0; padding: 0 16px; }
-    .search-box { display: flex; gap: 8px; background: white; border-radius: 16px; padding: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
-    .search-box input { flex: 1; padding: 10px 12px; border: none; font-size: 15px; outline: none; background: transparent; }
-    .search-box button { padding: 10px 18px; background: #ff4d00; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; }
-
-    /* LOCATION MODAL */
+    header h1 { font-size: 26px; font-weight: 800; }
+    header p { font-size: 13px; opacity: 0.88; margin-top: 4px; }
+    .location-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.2); border-radius: 20px; padding: 5px 12px; font-size: 12px; margin-top: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); }
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; display: flex; align-items: flex-end; justify-content: center; }
     .modal-overlay.hidden { display: none; }
     .modal { background: white; border-radius: 24px 24px 0 0; padding: 28px 20px 40px; width: 100%; max-width: 500px; }
     .modal h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-    .modal p  { font-size: 14px; color: #888; margin-bottom: 20px; }
+    .modal p { font-size: 14px; color: #888; margin-bottom: 20px; }
     .modal-btn { display: block; width: 100%; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; border: none; margin-bottom: 10px; }
     .modal-btn.primary { background: #ff4d00; color: white; }
     .modal-btn.secondary { background: #f0f0f0; color: #333; }
     .modal-input { width: 100%; padding: 12px 14px; border: 1.5px solid #ddd; border-radius: 12px; font-size: 15px; outline: none; margin-bottom: 10px; }
     .modal-input:focus { border-color: #ff4d00; }
-
-    /* FILTROS */
+    .search-wrap { max-width: 500px; margin: -28px auto 0; padding: 0 16px; }
+    .search-box { display: flex; gap: 8px; background: white; border-radius: 16px; padding: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+    .search-box input { flex: 1; padding: 10px 12px; border: none; font-size: 15px; outline: none; background: transparent; }
+    .search-box button { padding: 10px 18px; background: #ff4d00; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; }
     .filters { display: flex; gap: 8px; padding: 16px 16px 0; max-width: 500px; margin: 0 auto; overflow-x: auto; scrollbar-width: none; }
     .filters::-webkit-scrollbar { display: none; }
     .filter-btn { white-space: nowrap; padding: 7px 14px; border-radius: 20px; border: 1.5px solid #ddd; background: white; font-size: 13px; cursor: pointer; font-weight: 500; color: #555; }
     .filter-btn.active { background: #ff4d00; border-color: #ff4d00; color: white; }
-
-    /* LOADER */
     .loader { display: none; flex-direction: column; align-items: center; padding: 40px 20px; gap: 16px; }
     .loader.visible { display: flex; }
     .spinner { width: 44px; height: 44px; border: 4px solid #ffd5c2; border-top-color: #ff4d00; border-radius: 50%; animation: spin .8s linear infinite; }
@@ -56,54 +38,39 @@
     .loader-dots span:nth-child(2) { animation-delay: .2s; }
     .loader-dots span:nth-child(3) { animation-delay: .4s; }
     @keyframes blink { 0%,80%,100%{opacity:0} 40%{opacity:1} }
-
     #status { text-align: center; padding: 12px 16px 0; font-size: 13px; color: #888; max-width: 500px; margin: 0 auto; }
-
-    /* CARDS */
     .results { max-width: 500px; margin: 12px auto 40px; padding: 0 16px; display: flex; flex-direction: column; gap: 12px; }
     .card { background: white; border-radius: 16px; padding: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.07); animation: slideUp .3s ease; }
     @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
     .card.winner { border: 2px solid #ff4d00; box-shadow: 0 4px 20px rgba(255,77,0,0.15); }
     .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .platform { font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: .5px; }
-    .platform.rappi     { background: #fff0ec; color: #ff4d00; }
+    .platform { font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; }
+    .platform.rappi { background: #fff0ec; color: #ff4d00; }
     .platform.pedidosya { background: #fff0f0; color: #cc0000; }
-    .platform.ubereats  { background: #f0f0f0; color: #333; }
-    .badge-winner { display: flex; align-items: center; gap: 4px; font-size: 11px; background: #ff4d00; color: white; padding: 4px 10px; border-radius: 20px; font-weight: 700; }
+    .platform.ubereats { background: #f0f0f0; color: #333; }
+    .badge-winner { font-size: 11px; background: #ff4d00; color: white; padding: 4px 10px; border-radius: 20px; font-weight: 700; }
     .restaurant { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
-    .product    { font-size: 13px; color: #999; margin-bottom: 12px; }
+    .product { font-size: 13px; color: #999; margin-bottom: 12px; }
     .card-mid { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px; }
     .price-detail { font-size: 12px; color: #aaa; margin-bottom: 2px; }
     .discount-tag { color: #2a9d2a; font-weight: 600; }
-    .final-price  { font-size: 24px; font-weight: 800; color: #ff4d00; }
+    .final-price { font-size: 24px; font-weight: 800; color: #ff4d00; }
     .meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; font-size: 12px; color: #aaa; }
-    .meta .time  { font-size: 13px; font-weight: 600; color: #555; }
-    .meta .stars { color: #f5a623; }
-
-    /* BOTON PEDIR */
-    .btn-order {
-      display: block; text-align: center; padding: 14px;
-      background: linear-gradient(135deg, #ff4d00, #ff8c00);
-      color: white; border-radius: 12px; text-decoration: none;
-      font-weight: 700; font-size: 15px; letter-spacing: .2px;
-      box-shadow: 0 4px 12px rgba(255,77,0,0.3);
-    }
-    .btn-order:active { transform: scale(0.98); }
+    .meta .time { font-size: 13px; font-weight: 600; color: #555; }
+    .btn-order { display: block; text-align: center; padding: 14px; background: linear-gradient(135deg, #ff4d00, #ff8c00); color: white; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 15px; box-shadow: 0 4px 12px rgba(255,77,0,0.3); }
     .btn-order-sub { font-size: 11px; opacity: 0.85; margin-top: 2px; }
-
     .empty { text-align: center; padding: 40px 20px; color: #bbb; font-size: 15px; }
     .empty .icon { font-size: 48px; margin-bottom: 12px; }
   </style>
 </head>
 <body>
 
-<!-- MODAL UBICACION -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h2>📍 ¿Dónde estás?</h2>
     <p>Necesitamos tu ubicación para mostrarte las mejores ofertas disponibles en tu zona.</p>
     <button class="modal-btn primary" onclick="usarGPS()">📡 Usar mi ubicación actual</button>
-    <div style="text-align:center; color:#bbb; font-size:13px; margin: 8px 0;">o ingresa tu dirección</div>
+    <div style="text-align:center;color:#bbb;font-size:13px;margin:8px 0">o ingresa tu dirección</div>
     <input class="modal-input" type="text" id="addressInput" placeholder="Ej: Av. Libertad 123, Viña del Mar" />
     <button class="modal-btn secondary" onclick="usarDireccion()">Confirmar dirección</button>
   </div>
@@ -125,9 +92,9 @@
 </div>
 
 <div class="filters" id="filters" style="display:none">
-  <button class="filter-btn active" onclick="setFiltro('precio', this)">💰 Menor precio</button>
-  <button class="filter-btn" onclick="setFiltro('tiempo', this)">⚡ Más rápido</button>
-  <button class="filter-btn" onclick="setFiltro('rating', this)">⭐ Mejor rating</button>
+  <button class="filter-btn active" onclick="setFiltro('precio',this)">💰 Menor precio</button>
+  <button class="filter-btn" onclick="setFiltro('tiempo',this)">⚡ Más rápido</button>
+  <button class="filter-btn" onclick="setFiltro('rating',this)">⭐ Mejor rating</button>
 </div>
 
 <div class="loader" id="loader">
@@ -140,71 +107,65 @@
 <div class="results" id="results"></div>
 
 <script>
-  let userLat = null;
-  let userLng = null;
-  let userAddress = '';
-  let todosLosResultados = [];
-  let filtroActivo = 'precio';
+  let userLat = null, userLng = null, userAddress = '', userCiudad = '';
+  let todosLosResultados = [], filtroActivo = 'precio';
 
-  const API_URL = 'https://mejor-delivery-api.onrender.com';
+  const BACKEND = 'https://mejor-delivery-api.onrender.com';
 
-  const mensajesLoader = [
-    'Consultando Rappi en tu zona...',
-    'Consultando PedidosYa cerca tuyo...',
+  const loaderMsgs = [
+    'Buscando en Rappi cerca tuyo...',
+    'Consultando PedidosYa en tu zona...',
     'Revisando Uber Eats...',
-    'Comparando precios...',
-    'Buscando la mejor oferta...',
+    'Comparando precios y promos...',
+    'Casi listo...',
   ];
 
-  // Al cargar, abrir modal de ubicación
   window.addEventListener('load', () => {
     document.getElementById('modalOverlay').classList.remove('hidden');
   });
 
-  function abrirModal() {
-    document.getElementById('modalOverlay').classList.remove('hidden');
-  }
+  function abrirModal() { document.getElementById('modalOverlay').classList.remove('hidden'); }
+  function cerrarModal() { document.getElementById('modalOverlay').classList.add('hidden'); }
 
-  function cerrarModal() {
-    document.getElementById('modalOverlay').classList.add('hidden');
+  function detectarCiudadSlug(lat) {
+    if (!lat) return 'santiago';
+    const laLat = parseFloat(lat);
+    if (laLat > -33.1 && laLat < -32.8) return 'vina-del-mar';
+    if (laLat > -33.1 && laLat < -32.9) return 'valparaiso';
+    if (laLat > -36.9 && laLat < -36.7) return 'concepcion';
+    if (laLat > -38.8 && laLat < -38.6) return 'temuco';
+    if (laLat > -23.7 && laLat < -23.5) return 'antofagasta';
+    if (laLat > -20.3 && laLat < -20.1) return 'iquique';
+    return 'santiago';
   }
 
   async function usarGPS() {
-    if (!navigator.geolocation) {
-      alert('Tu navegador no soporta geolocalización. Ingresa tu dirección.');
-      return;
-    }
+    if (!navigator.geolocation) { alert('Tu navegador no soporta GPS. Ingresa tu dirección.'); return; }
     document.getElementById('locationText').textContent = 'Obteniendo GPS...';
     cerrarModal();
-
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        userLat = pos.coords.latitude;
-        userLng = pos.coords.longitude;
-        // Geocodificación inversa con API gratuita
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLng}&format=json`);
-          const data = await res.json();
-          const suburb = data.address?.suburb || data.address?.neighbourhood || data.address?.city || 'Tu zona';
-          const city = data.address?.city || data.address?.town || '';
-          userAddress = suburb + (city ? ', ' + city : '');
-          document.getElementById('locationText').textContent = '📍 ' + userAddress;
-        } catch {
-          userAddress = `${userLat.toFixed(4)}, ${userLng.toFixed(4)}`;
-          document.getElementById('locationText').textContent = '📍 Ubicación detectada';
-        }
-      },
-      (err) => {
-        document.getElementById('locationText').textContent = '⚠️ Sin GPS — ingresa dirección';
-        abrirModal();
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      userLat = pos.coords.latitude;
+      userLng = pos.coords.longitude;
+      userCiudad = detectarCiudadSlug(userLat);
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLng}&format=json`);
+        const data = await res.json();
+        const suburb = data.address?.suburb || data.address?.neighbourhood || data.address?.city || 'Tu zona';
+        const city = data.address?.city || data.address?.town || '';
+        userAddress = suburb + (city ? ', ' + city : '');
+        document.getElementById('locationText').textContent = '📍 ' + userAddress;
+      } catch {
+        document.getElementById('locationText').textContent = '📍 Ubicación detectada';
       }
-    );
+    }, () => {
+      document.getElementById('locationText').textContent = '⚠️ Sin GPS';
+      abrirModal();
+    });
   }
 
   async function usarDireccion() {
     const input = document.getElementById('addressInput').value.trim();
     if (!input) { alert('Ingresa una dirección'); return; }
-
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(input + ', Chile')}&format=json&limit=1`);
       const data = await res.json();
@@ -212,10 +173,11 @@
         userLat = parseFloat(data[0].lat);
         userLng = parseFloat(data[0].lon);
         userAddress = input;
+        userCiudad = detectarCiudadSlug(userLat);
         document.getElementById('locationText').textContent = '📍 ' + input;
         cerrarModal();
       } else {
-        alert('No encontramos esa dirección. Intenta con una más específica.');
+        alert('No encontramos esa dirección.');
       }
     } catch {
       userAddress = input;
@@ -224,9 +186,7 @@
     }
   }
 
-  document.getElementById('query').addEventListener('keydown', e => {
-    if (e.key === 'Enter') buscar();
-  });
+  document.getElementById('query').addEventListener('keydown', e => { if (e.key === 'Enter') buscar(); });
 
   function setFiltro(tipo, btn) {
     filtroActivo = tipo;
@@ -236,57 +196,55 @@
   }
 
   function ordenar(items) {
-    const copia = [...items];
-    if (filtroActivo === 'precio') return copia.sort((a, b) => a.finalPrice - b.finalPrice);
-    if (filtroActivo === 'tiempo') return copia.sort((a, b) => (parseInt(a.estimatedTime) || 99) - (parseInt(b.estimatedTime) || 99));
-    if (filtroActivo === 'rating') return copia.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    return copia;
+    const c = [...items];
+    if (filtroActivo === 'precio') return c.sort((a,b) => a.finalPrice - b.finalPrice);
+    if (filtroActivo === 'tiempo') return c.sort((a,b) => (parseInt(a.estimatedTime)||99) - (parseInt(b.estimatedTime)||99));
+    if (filtroActivo === 'rating') return c.sort((a,b) => (b.rating||0) - (a.rating||0));
+    return c;
   }
 
   async function buscar() {
     const query = document.getElementById('query').value.trim();
     if (!query) return;
+    if (!userLat && !userAddress) { abrirModal(); return; }
 
-    if (!userLat && !userAddress) {
-      abrirModal();
-      return;
-    }
-
-    const loader  = document.getElementById('loader');
-    const status  = document.getElementById('status');
+    const loader = document.getElementById('loader');
+    const status = document.getElementById('status');
     const results = document.getElementById('results');
     const filters = document.getElementById('filters');
 
     loader.classList.add('visible');
-    status.textContent  = '';
-    results.innerHTML   = '';
+    status.textContent = '';
+    results.innerHTML = '';
     filters.style.display = 'none';
 
     let i = 0;
     const intervalo = setInterval(() => {
-      document.getElementById('loader-text').textContent = mensajesLoader[i % mensajesLoader.length];
+      document.getElementById('loader-text').textContent = loaderMsgs[i % loaderMsgs.length];
       i++;
-    }, 700);
+    }, 800);
 
     try {
-      let url = `${API_URL}/api/search?query=${encodeURIComponent(query)}`;
+      // Llamar al backend con coordenadas GPS reales
+      let url = `${BACKEND}/api/search?query=${encodeURIComponent(query)}`;
       if (userLat) url += `&lat=${userLat}&lng=${userLng}`;
       if (userAddress) url += `&address=${encodeURIComponent(userAddress)}`;
+      url += `&ciudad=${userCiudad}`;
 
-      const res  = await fetch(url);
+      const res = await fetch(url);
       const data = await res.json();
 
       clearInterval(intervalo);
       loader.classList.remove('visible');
 
       if (!data.results || data.results.length === 0) {
-        results.innerHTML = '<div class="empty"><div class="icon">🍽️</div>No encontramos ofertas en tu zona para "' + query + '"</div>';
+        results.innerHTML = '<div class="empty"><div class="icon">🍽️</div>No encontramos ofertas en tu zona.</div>';
         return;
       }
 
       todosLosResultados = data.results;
       filters.style.display = 'flex';
-      status.textContent = data.results.length + ' ofertas encontradas cerca de ti';
+      status.textContent = data.results.length + ' plataformas comparadas cerca de ' + (userAddress.split(',')[0] || 'ti');
       mostrarResultados(ordenar(todosLosResultados));
 
     } catch (err) {
@@ -296,74 +254,66 @@
     }
   }
 
+  function generarLink(item) {
+    if (item.platform === 'rappi') {
+      let url = `https://www.rappi.cl/search?query=${encodeURIComponent(item.productName)}`;
+      if (userLat) url += `&lat=${userLat}&lng=${userLng}`;
+      return url + '&utm_source=mejordelivery';
+    }
+    if (item.platform === 'pedidosya') {
+      const ciudad = userCiudad || 'santiago';
+      // En móvil intenta abrir la app
+      if (/Android|iPhone/i.test(navigator.userAgent)) {
+        return `pedidosya://search?query=${encodeURIComponent(item.productName)}&city=${ciudad}`;
+      }
+      return `https://www.pedidosya.cl/restaurantes/${ciudad}?query=${encodeURIComponent(item.productName)}&utm_source=mejordelivery`;
+    }
+    if (item.platform === 'ubereats') {
+      let url = `https://www.ubereats.com/cl/search?q=${encodeURIComponent(item.productName)}`;
+      if (userLat) url += `&userLat=${userLat}&userLng=${userLng}`;
+      return url + '&utm_source=mejordelivery';
+    }
+    return item.deepLink;
+  }
+
   function mostrarResultados(items) {
     const results = document.getElementById('results');
     results.innerHTML = '';
-
     items.forEach((item, index) => {
       const card = document.createElement('div');
       card.className = 'card' + (index === 0 ? ' winner' : '');
       card.style.animationDelay = (index * 0.07) + 's';
 
       const discount = item.discount > 0
-        ? '<span class="discount-tag">-$' + item.discount.toLocaleString('es-CL') + ' dto</span> · '
-        : '';
-
-      const estrellas = item.rating ? '<span class="stars">★ ' + item.rating + '</span>' : '';
-
-      // Deep link directo al checkout según plataforma
-      const checkoutLink = generarCheckoutLink(item);
+        ? `<span class="discount-tag">-$${item.discount.toLocaleString('es-CL')} dto</span> · ` : '';
+      const estrellas = item.rating ? `<span>★ ${item.rating}</span>` : '';
+      const link = generarLink(item);
 
       card.innerHTML =
-        '<div class="card-top">' +
-          '<span class="platform ' + item.platform + '">' + item.platform + '</span>' +
-          (index === 0 ? '<span class="badge-winner">🏆 Mejor opción</span>' : '') +
-        '</div>' +
-        '<div class="restaurant">' + item.restaurantName + '</div>' +
-        '<div class="product">' + item.productName + '</div>' +
-        '<div class="card-mid">' +
-          '<div>' +
-            '<div class="price-detail">' + discount + 'envío $' + item.deliveryFee.toLocaleString('es-CL') + '</div>' +
-            '<div class="final-price">$' + item.finalPrice.toLocaleString('es-CL') + '</div>' +
-          '</div>' +
-          '<div class="meta">' +
-            '<span class="time">⏱ ' + item.estimatedTime + '</span>' +
-            estrellas +
-          '</div>' +
-        '</div>' +
-        '<a class="btn-order" href="' + checkoutLink + '" target="_blank">' +
-          'Pedir en ' + item.platform + ' →' +
-          '<div class="btn-order-sub">Ir directo a la oferta</div>' +
-        '</a>';
+        `<div class="card-top">
+          <span class="platform ${item.platform}">${item.platform}</span>
+          ${index === 0 ? '<span class="badge-winner">🏆 Mejor opción</span>' : ''}
+        </div>
+        <div class="restaurant">${item.restaurantName}</div>
+        <div class="product">${item.productName}</div>
+        <div class="card-mid">
+          <div>
+            <div class="price-detail">${discount}envío $${item.deliveryFee.toLocaleString('es-CL')}</div>
+            <div class="final-price">$${item.finalPrice.toLocaleString('es-CL')}</div>
+          </div>
+          <div class="meta">
+            <span class="time">⏱ ${item.estimatedTime}</span>
+            ${estrellas}
+          </div>
+        </div>
+        <a class="btn-order" href="${link}" target="_blank">
+          Pedir en ${item.platform} →
+          <div class="btn-order-sub">Ver oferta exacta en tu zona</div>
+        </a>`;
 
       results.appendChild(card);
     });
   }
-
-  function generarCheckoutLink(item) {
-  if (item.platform === 'rappi') {
-    let url = item.deepLink;
-    if (userLat) url += `&lat=${userLat}&lng=${userLng}`;
-    return url;
-  }
-
-  if (item.platform === 'pedidosya') {
-  const ciudad = item.restaurantName.includes('Viña') ? 'vina-del-mar' : 'santiago';
-  const addr = encodeURIComponent(userAddress || '');
-  const appUrl = `pedidosya://search?query=${encodeURIComponent(item.productName)}&city=${ciudad}`;
-  const webUrl = `https://www.pedidosya.cl/restaurantes/${ciudad}?query=${encodeURIComponent(item.productName)}&address=${addr}`;
-  return /Android|iPhone/i.test(navigator.userAgent) ? appUrl : webUrl;
-}
-
-  if (item.platform === 'ubereats') {
-    let url = item.deepLink;
-    if (userLat) url += `&userLat=${userLat}&userLng=${userLng}`;
-    return url;
-  }
-
-  return item.deepLink;
-}
 </script>
-
 </body>
 </html>
