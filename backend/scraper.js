@@ -44,23 +44,36 @@ async function getRappi(query, lat, lng, address) {
     if (!stores.length) return getFallbackRappi(query, lat, lng, ciudad);
 
     return stores.slice(0, 4).map(s => {
-      const product = s.products?.[0];
-      const price = product?.real_price || 5490;
-      const discount = product?.discount_value || 0;
+  const product = s.products?.[0];
+  const price = product?.real_price || 5490;
+  const discount = product?.discount_value || 0;
+  const productId = product?.id || '';
+  const storeSlug = s.store_name.toLowerCase()
+    .replace(/[áàä]/g, 'a').replace(/[éèë]/g, 'e')
+    .replace(/[íìï]/g, 'i').replace(/[óòö]/g, 'o')
+    .replace(/[úùü]/g, 'u').replace(/[ñ]/g, 'n')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-      return {
-        platform: 'rappi',
-        restaurantName: s.store_name,
-        productName: product?.name || query,
-        price: price,
-        deliveryFee: s.shipping_cost || 0,
-        discount: discount,
-        estimatedTime: s.eta || '25-35 min',
-        rating: s.rating || null,
-        deepLink: `https://www.rappi.cl/restaurantes/${s.store_id}?utm_source=mejordelivery`,
-        imageUrl: s.logo ? `https://images.rappi.cl/restaurants_logo/${s.logo}` : null,
-      };
-    });
+  // Deep link directo al producto
+  const deepLink = productId
+    ? `https://www.rappi.cl/restaurantes/${s.store_id}-${storeSlug}?productId=${productId}&utm_source=mejordelivery`
+    : `https://www.rappi.cl/restaurantes/${s.store_id}-${storeSlug}?utm_source=mejordelivery`;
+
+  return {
+    platform: 'rappi',
+    restaurantName: s.store_name,
+    productName: product?.name || query,
+    productId: productId,
+    storeId: s.store_id,
+    price: price,
+    deliveryFee: s.shipping_cost || 0,
+    discount: discount,
+    estimatedTime: s.eta || '25-35 min',
+    rating: s.rating || null,
+    deepLink: deepLink,
+    imageUrl: s.logo ? `https://images.rappi.cl/restaurants_logo/${s.logo}` : null,
+  };
+});
 
   } catch (err) {
     if (err.response?.status === 401) {
