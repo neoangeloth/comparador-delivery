@@ -255,26 +255,26 @@
   }
 
   function generarLink(item) {
-    if (item.platform === 'rappi') {
-      let url = `https://www.rappi.cl/search?query=${encodeURIComponent(item.productName)}`;
-      if (userLat) url += `&lat=${userLat}&lng=${userLng}`;
-      return url + '&utm_source=mejordelivery';
-    }
-    if (item.platform === 'pedidosya') {
-      const ciudad = userCiudad || 'santiago';
-      // En móvil intenta abrir la app
-      if (/Android|iPhone/i.test(navigator.userAgent)) {
-        return `pedidosya://search?query=${encodeURIComponent(item.productName)}&city=${ciudad}`;
-      }
-      return `https://www.pedidosya.cl/restaurantes/${ciudad}?query=${encodeURIComponent(item.productName)}&utm_source=mejordelivery`;
-    }
-    if (item.platform === 'ubereats') {
-      let url = `https://www.ubereats.com/cl/search?q=${encodeURIComponent(item.productName)}`;
-      if (userLat) url += `&userLat=${userLat}&userLng=${userLng}`;
-      return url + '&utm_source=mejordelivery';
-    }
-    return item.deepLink;
+  if (item.platform === 'rappi') {
+    let url = `https://www.rappi.cl/search?query=${encodeURIComponent(item.productName)}`;
+    if (userLat) url += `&lat=${userLat}&lng=${userLng}`;
+    if (userAddress) url += `&address=${encodeURIComponent(userAddress)}`;
+    return url + '&utm_source=mejordelivery';
   }
+  if (item.platform === 'pedidosya') {
+    const ciudad = userCiudad || 'santiago';
+    if (/Android|iPhone/i.test(navigator.userAgent)) {
+      return `intent://search?query=${encodeURIComponent(item.productName)}&city=${ciudad}#Intent;scheme=pedidosya;package=com.pedidosya.mobile;end`;
+    }
+    return `https://www.pedidosya.cl/restaurantes/${ciudad}?query=${encodeURIComponent(item.productName)}&utm_source=mejordelivery`;
+  }
+  if (item.platform === 'ubereats') {
+    let url = `https://www.ubereats.com/cl/search?q=${encodeURIComponent(item.productName)}`;
+    if (userLat) url += `&userLat=${userLat}&userLng=${userLng}`;
+    return url + '&utm_source=mejordelivery';
+  }
+  return item.deepLink;
+}
 
   function mostrarResultados(items) {
     const results = document.getElementById('results');
